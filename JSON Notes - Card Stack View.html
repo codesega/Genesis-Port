@@ -1,0 +1,114 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Notes - Card Stack View</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #212431;
+            color: white;
+            font-family: 'Roboto', sans-serif;
+            padding: 20px;
+        }
+        .card-stack {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            position: relative;
+            background-color: #d6d7d7;
+            color: #212431;
+            padding: 15px;
+            margin-bottom: -80px;
+            border-left: 5px solid #ea5c1f;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .card-header {
+            background-color: #4f5d75;
+            color: white;
+            padding: 10px;
+            margin: -15px -15px 10px -15px;
+            border-radius: 5px 5px 0 0;
+        }
+        .card:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="card-stack">
+        <div class="card">
+            <div class="card-header">Definitions</div>
+            <ul>
+                <li><strong>JSON</strong>: Lightweight data interchange format, plain text in JavaScript notation, used to send data between computers, language independent.</li>
+                <li><strong>String</strong>: Text wrapped in quotes.</li>
+                <li><strong>Object</strong>: Collection of info in curly braces, with properties and values.</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-header">Examples</div>
+            <p><strong>JSON Object</strong>: {"name": "John", "age": 30, "car": null}</p>
+            <p>Explanation: An object with 3 key-value pairs, identified by curly braces.</p>
+        </div>
+        <div class="card">
+            <div class="card-header">Syntax Rules</div>
+            <ol>
+                <li>JSON data uses key-value pairs or arrays.</li>
+                <li>Keys must be strings in double quotes.</li>
+            </ol>
+        </div>
+        <div class="card">
+            <div class="card-header">Visual Aids</div>
+            <p><strong>Table: JSON Breakdown</strong></p>
+            <table>
+                <tr><th>Key</th><th>Value</th></tr>
+                <tr><td>name</td><td>John</td></tr>
+                <tr><td>age</td><td>30</td></tr>
+                <tr><td>car</td><td>null</td></tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
